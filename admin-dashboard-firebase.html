@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نسخة مُحسّنة للاستضافة - أمانة الأحساء</title>
+    <!-- نفس CSS الموجود -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+      import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, query, orderBy } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+
+      // ضع Firebase config هنا (ستحصل عليه من Firebase Console)
+      const firebaseConfig = {
+  apiKey: "AIzaSyCmv3l8_CKMjP1Wo3G7FpM4f6ox59gQb7g",
+  authDomain: "test-one-6c755.firebaseapp.com",
+  projectId: "test-one-6c755",
+  storageBucket: "test-one-6c755.firebasestorage.app",
+  messagingSenderId: "103909985339",
+  appId: "1:103909985339:web:e827353eab071a76cca01e",
+  measurementId: "G-41VG1LCE5L"
+};
+
+      // تهيئة Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      // جعل Firebase متاح عالمياً
+      window.db = db;
+      window.collection = collection;
+      window.addDoc = addDoc;
+      window.getDocs = getDocs;
+      window.doc = doc;
+      window.updateDoc = updateDoc;
+      window.query = query;
+      window.orderBy = orderBy;
+
+      console.log('🔥 Firebase initialized successfully!');
+    </script>
+</head>
+<body>
+    <!-- نفس HTML الموجود -->
+    
+    <script>
+        // تحديث دوال API لتعمل مع Firebase
+        
+        // Load appointments from Firebase
+        async function loadAppointments() {
+            console.log('📅 Loading appointments from Firebase...');
+            
+            try {
+                if (window.db) {
+                    const appointmentsRef = window.collection(window.db, 'appointments');
+                    const q = window.query(appointmentsRef, window.orderBy('created_at', 'desc'));
+                    const querySnapshot = await window.getDocs(q);
+                    
+                    const appointments = [];
+                    querySnapshot.forEach((doc) => {
+                        appointments.push({
+                            id: doc.id,
+                            ...doc.data()
+                        });
+                    });
+                    
+                    if (appointments.length > 0) {
+                        console.log('📡 Firebase data loaded:', appointments.length, 'appointments');
+                        currentAppointments = appointments;
+                        renderAppointments(appointments);
+                        return;
+                    }
+                }
+                
+                // Fallback to demo data
+                throw new Error('No Firebase data available');
+            } catch (error) {
+                console.log('🎭 Using demo data:', error.message);
+                const demoData = getDemoAppointments();
+                currentAppointments = demoData;
+                renderAppointments(demoData);
+            }
+        }
+
+        // Save appointment to Firebase
+        async function saveAppointment(appointmentData) {
+            try {
+                if (window.db) {
+                    const docRef = await window.addDoc(
+                        window.collection(window.db, 'appointments'), 
+                        {
+                            ...appointmentData,
+                            created_at: new Date().toISOString()
+                        }
+                    );
+                    console.log('✅ Appointment saved with ID:', docRef.id);
+                    return { success: true, id: docRef.id };
+                }
+            } catch (error) {
+                console.error('❌ Error saving appointment:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Update appointment status in Firebase
+        async function updateAppointmentStatus(id, status, notes) {
+            try {
+                if (window.db) {
+                    const appointmentRef = window.doc(window.db, 'appointments', id);
+                    await window.updateDoc(appointmentRef, {
+                        status: status,
+                        admin_notes: notes,
+                        updated_at: new Date().toISOString()
+                    });
+                    console.log('✅ Appointment updated successfully');
+                    return { success: true };
+                }
+            } catch (error) {
+                console.error('❌ Error updating appointment:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // باقي الكود يبقى كما هو...
+        // (نسخ باقي JavaScript من admin-dashboard.html)
+    </script>
+</body>
+</html>
